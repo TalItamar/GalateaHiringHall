@@ -91,9 +91,9 @@ if st.session_state["authentication_status"] and "admin" in roles:
             st.write("**Step Selection for Each Option:**")
             # Only show steps where the value is not "-" for each option
             base_pay_steps = df2[df2["Base Pay"] != "-"]["Step"].tolist()
-            command_rights_steps = df2[df2["Command Rights"] != "-"]["Step"].tolist()
-            salvage_rights_steps = df2[df2["Salvage Rights"] != "-"]["Step"].tolist()
-            support_rights_steps = df2[df2["Support Rights"] != "-"]["Step"].tolist()
+            command_rights_steps = df2[df2["Command Rights"] != "—"]["Step"].tolist()
+            salvage_rights_steps = df2[df2["Salvage Rights"] != "—"]["Step"].tolist()
+            support_rights_steps = df2[df2["Support Rights"] != "—"]["Step"].tolist()
             transport_terms_steps = df2[df2["Transportation Terms"].notna()]["Step"].tolist()
 
             base_pay_step = st.selectbox("Pick a step for Base Pay", base_pay_steps, key="base_pay_step")
