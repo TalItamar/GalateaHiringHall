@@ -78,8 +78,6 @@ if st.session_state["authentication_status"] and "admin" in roles:
             length = st.number_input("Contract Length (in monthes):", min_value=1)
             tracks = st.text_input("Tracks (comma-separated):")
             track_types = st.text_input("Track Types (comma-separated):")
-            base_pay = st.number_input("Base Pay:", min_value=0)
-            salvage_terms = st.number_input("Salvage Terms:", min_value=0)
 
             st.dataframe(
     df2,
@@ -89,7 +87,6 @@ if st.session_state["authentication_status"] and "admin" in roles:
         "Transportation Terms": st.column_config.NumberColumn("Transportation Terms", format="%.0f%%"),
     }
 )
-
 
             st.write("**Step Selection for Each Option:**")
             step_options = df2["Step"].tolist()
@@ -101,19 +98,15 @@ if st.session_state["authentication_status"] and "admin" in roles:
             transport_terms_step = st.selectbox("Pick a step for Transportation Terms", step_options, key="transport_terms_step")
 
             base_pay_row = df2[df2["Step"] == base_pay_step].iloc[0]
-            command_rights_row = df2[df2["Step"] == command_rights_step].iloc[0]
-            salvage_rights_row = df2[df2["Step"] == salvage_rights_step].iloc[0]
-            support_rights_row = df2[df2["Step"] == support_rights_step].iloc[0]
-            transport_terms_row = df2[df2["Step"] == transport_terms_step].iloc[0]
-
             st.write(f"**Base Pay for Step {base_pay_step}:** {base_pay_row['Base Pay']}%")
+            command_rights_row = df2[df2["Step"] == command_rights_step].iloc[0]
             st.write(f"**Command Rights for Step {command_rights_step}:** {command_rights_row['Command Rights']}")
+            salvage_rights_row = df2[df2["Step"] == salvage_rights_step].iloc[0]
             st.write(f"**Salvage Rights for Step {salvage_rights_step}:** {salvage_rights_row['Salvage Rights']}")
+            support_rights_row = df2[df2["Step"] == support_rights_step].iloc[0]
             st.write(f"**Support Rights for Step {support_rights_step}:** {support_rights_row['Support Rights']}")
+            transport_terms_row = df2[df2["Step"] == transport_terms_step].iloc[0]        
             st.write(f"**Transportation Terms for Step {transport_terms_step}:** {transport_terms_row['Transportation Terms']}%")
-
-            transport_terms = st.number_input("Transport Terms:", min_value=0)
-            support_rights = st.number_input("Support Rights:", min_value=0)
             if st.button("Submit"):
                 set_all_contracts_inactive()
                 # You may want to update add_contract to use the selected values for each option
