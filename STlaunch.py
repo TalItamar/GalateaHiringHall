@@ -89,13 +89,18 @@ if st.session_state["authentication_status"] and "admin" in roles:
 )
 
             st.write("**Step Selection for Each Option:**")
-            step_options = df2["Step"].tolist()
+            # Only show steps where the value is not "-" for each option
+            base_pay_steps = df2[df2["Base Pay"] != "-"]["Step"].tolist()
+            command_rights_steps = df2[df2["Command Rights"] != "-"]["Step"].tolist()
+            salvage_rights_steps = df2[df2["Salvage Rights"] != "-"]["Step"].tolist()
+            support_rights_steps = df2[df2["Support Rights"] != "-"]["Step"].tolist()
+            transport_terms_steps = df2[df2["Transportation Terms"].notna()]["Step"].tolist()
 
-            base_pay_step = st.selectbox("Pick a step for Base Pay", step_options, key="base_pay_step")
-            command_rights_step = st.selectbox("Pick a step for Command Rights", step_options, key="command_rights_step")
-            salvage_rights_step = st.selectbox("Pick a step for Salvage Rights", step_options, key="salvage_rights_step")
-            support_rights_step = st.selectbox("Pick a step for Support Rights", step_options, key="support_rights_step")
-            transport_terms_step = st.selectbox("Pick a step for Transportation Terms", step_options, key="transport_terms_step")
+            base_pay_step = st.selectbox("Pick a step for Base Pay", base_pay_steps, key="base_pay_step")
+            command_rights_step = st.selectbox("Pick a step for Command Rights", command_rights_steps, key="command_rights_step")
+            salvage_rights_step = st.selectbox("Pick a step for Salvage Rights", salvage_rights_steps, key="salvage_rights_step")
+            support_rights_step = st.selectbox("Pick a step for Support Rights", support_rights_steps, key="support_rights_step")
+            transport_terms_step = st.selectbox("Pick a step for Transportation Terms", transport_terms_steps, key="transport_terms_step")
 
             base_pay_row = df2[df2["Step"] == base_pay_step].iloc[0]
             st.write(f"**Base Pay for Step {base_pay_step}:** {base_pay_row['Base Pay']}%")
