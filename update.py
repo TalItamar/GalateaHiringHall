@@ -22,7 +22,12 @@ if st.session_state.get("authentication_status"):
         **Support Rights:** {contract[0][8]}  
         ---""")
         if st.button("Negotiate Contract"):
-           #add negotiation logic TODO
+           if st.button("Negotiate Contract"):
+            @st.dialog("negotiation")
+            def negotiation():
+                st.write("negotiation station")
+                
+            negotiation()
             st.success("Contract accepted!")
     else:
         st.info("No active contract available.")
