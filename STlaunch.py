@@ -82,7 +82,7 @@ if st.session_state["authentication_status"] and "admin" in roles:
             salvage_terms = st.number_input("Salvage Terms:", min_value=0)
 
             st.dataframe(
-    df,
+    df2,
     use_container_width=True,
     column_config={
         "Base Pay": st.column_config.NumberColumn("Base Pay", format="%.0f%%"),
