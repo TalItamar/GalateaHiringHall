@@ -15,6 +15,27 @@ import pandas as pd
 
 
 
+rows = [
+    # Step, Base Pay %, Command Rights, Salvage Rights,   Support Rights,    Transportation Terms %
+    (1,   50,  "—",           "None",                "None",             None),
+    (2,   55,  "—",           "—",                   "Straight/20%",     None),
+    (3,   60,  "Integrated",  "Exchange",            "Straight/40%",     None),
+    (4,   70,  "—",           "10%",                 "Straight/60%",     None),
+    (5,   80,  "—",           "20%",                 "Straight/80%",     0),
+    (6,   90,  "—",           "30%",                 "Straight/100%",    25),
+    (7,   100, "House",       "40%",                 "Battle/10%",       50),
+    (8,   110, "Liaison",     "50%",                 "Battle/20%",       75),
+    (9,   120, "—",           "60%",                 "Battle/30%",       100),
+    (10,  130, "—",           "70%",                 "Battle/40%",       None),
+    (11,  150, "Independent", "80%",                 "Battle/50%",       None),
+    (12,  175, "—",           "90%",                 "Battle/75%",       None),
+    (13,  200, "—",           "100%",                "Battle/100%",      None),
+]
+
+df2 = pd.DataFrame(rows, columns=[
+    "Step", "Base Pay", "Command Rights", "Salvage Rights", "Support Rights", "Transportation Terms"
+])
+
 
 #load mercenary mech MUL CSV
 df = pd.read_csv("MercenaryMUL.csv")
@@ -59,6 +80,26 @@ if st.session_state["authentication_status"] and "admin" in roles:
             track_types = st.text_input("Track Types (comma-separated):")
             base_pay = st.number_input("Base Pay:", min_value=0)
             salvage_terms = st.number_input("Salvage Terms:", min_value=0)
+
+            st.dataframe(
+    df,
+    use_container_width=True,
+    column_config={
+        "Base Pay": st.column_config.NumberColumn("Base Pay", format="%.0f%%"),
+        "Transportation Terms": st.column_config.NumberColumn("Transportation Terms", format="%.0f%%"),
+    }
+)
+
+# Step picker + details
+            step = st.selectbox("Pick a step", df2["Step"].tolist(), index=0)
+            row = df2.loc[df2["Step"] == step].iloc[0]
+
+            st.write("**Selected Step Details:**")
+            st.write(f"**Base Pay:** {row['Base Pay']}%")
+            st.write(f"**Command Rights:** {row['Command Rights']}")
+            st.write(f"**Salvage Rights:** {row['Salvage Rights']}")
+            st.write(f"**Support Rights:** {row['Support Rights']}")
+            st.write(f"**Transportation Terms:** {row['Transportation Terms']}%")
             transport_terms = st.number_input("Transport Terms:", min_value=0)
             support_rights = st.number_input("Support Rights:", min_value=0)
             if st.button("Submit"):
