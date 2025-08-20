@@ -91,19 +91,22 @@ if st.session_state["authentication_status"] and "admin" in roles:
 )
 
 # Step picker + details
-            step = st.selectbox("Pick a step", df2["Step"].tolist(), index=0)
-            row = df2.loc[df2["Step"] == step].iloc[0]
-
-            st.write("**Selected Step Details:**")
-            st.write(f"**Base Pay:** {row['Base Pay']}%")
-            st.write(f"**Command Rights:** {row['Command Rights']}")
-            st.write(f"**Salvage Rights:** {row['Salvage Rights']}")
-            st.write(f"**Support Rights:** {row['Support Rights']}")
-            st.write(f"**Transportation Terms:** {row['Transportation Terms']}%")
+            st.write("**Step Selection:**")
+            selected_steps = {}
+            for idx, row in df2.iterrows():
+                selected = st.selectbox(f"Step {row['Step']}", [row['Step']], index=0, key=f"step_{row['Step']}")
+                selected_steps[row['Step']] = selected
+                st.write(f"**Base Pay:** {row['Base Pay']}%")
+                st.write(f"**Command Rights:** {row['Command Rights']}")
+                st.write(f"**Salvage Rights:** {row['Salvage Rights']}")
+                st.write(f"**Support Rights:** {row['Support Rights']}")
+                st.write(f"**Transportation Terms:** {row['Transportation Terms']}%")
+                st.markdown("---")
             transport_terms = st.number_input("Transport Terms:", min_value=0)
             support_rights = st.number_input("Support Rights:", min_value=0)
             if st.button("Submit"):
                 set_all_contracts_inactive()
+                # You may want to update add_contract to handle multiple steps if needed
                 add_contract(name, length, tracks, track_types, base_pay, salvage_terms, transport_terms, support_rights)
                 st.success("Contract submitted successfully!")
         submit_contract_dialog()
