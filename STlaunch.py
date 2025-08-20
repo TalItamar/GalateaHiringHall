@@ -13,6 +13,9 @@ from user_db import *
 import datetime
 import pandas as pd
 
+
+
+
 #load mercenary mech MUL CSV
 df = pd.read_csv("MercenaryMUL.csv")
 #turn into options for mech selection
@@ -41,16 +44,81 @@ try:
     authenticator.login()
 except LoginError as e:
     st.error(e)
+user_info = config['credentials']['usernames'].get(st.session_state["username"], {})
+roles = user_info.get('roles') or []
+if st.session_state["authentication_status"] and "admin" in roles:
+    st.write('Welcome Hiring Hall Administrator')
 
-if st.session_state["authentication_status"]:
+    st.header("Contract Submission")
+    if st.button("Submit Contract"):
+        @st.dialog("Submit Contract")
+        def submit_contract_dialog():
+            name = st.text_input("Contract Name:")
+            length = st.number_input("Contract Length (in monthes):", min_value=1)
+            tracks = st.text_input("Tracks (comma-separated):")
+            track_types = st.text_input("Track Types (comma-separated):")
+            base_pay = st.number_input("Base Pay:", min_value=0)
+            salvage_terms = st.number_input("Salvage Terms:", min_value=0)
+            transport_terms = st.number_input("Transport Terms:", min_value=0)
+            support_rights = st.number_input("Support Rights:", min_value=0)
+            if st.button("Submit"):
+                set_all_contracts_inactive()
+                add_contract(name, length, tracks, track_types, base_pay, salvage_terms, transport_terms, support_rights)
+                st.success("Contract submitted successfully!")
+        submit_contract_dialog()
+
+    companies = get_all_companies()
+    for company in companies:
+        st.subheader(f"Company: {company[1]} (Owner: {company[5]})")
+        st.markdown("**Pilots:**")
+        pilots = get_pilots(company[5])
+        for pilot in pilots:
+            with st.expander(f"Edit Pilot: {pilot[1]} ({pilot[2]})"):  # pilot[1]=name, pilot[2]=callsign
+                new_name = st.text_input("Pilot Name", value=pilot[1], key=f"pilot_name_{pilot[0]}")
+                new_callsign = st.text_input("Callsign", value=pilot[2], key=f"pilot_callsign_{pilot[0]}")
+                new_pskill = st.number_input("Pskill", value=int(pilot[3]), min_value=0, max_value=6, step=1, key=f"pilot_pskill_{pilot[0]}")
+                new_gskill = st.number_input("Gskill", value=int(pilot[4]), min_value=0, max_value=6, step=1, key=f"pilot_gskill_{pilot[0]}")
+                if st.button("Update Pilot", key=f"update_pilot_{pilot[0]}"):
+                    update_pilot(pilot[0], name=new_name, callsign=new_callsign, Pskill=new_pskill, Gskill=new_gskill)
+                    st.success("Pilot updated!")
+        if st.button("Edit Company", key=f"edit_{company[0]}"):
+            @st.dialog("Edit Company")
+            def edit_company_dialog():
+                st.write("Edit Company Details")
+                new_name = st.text_input("New Company Name:", value=company[1])
+                new_support_points = st.number_input("New Support Points:", value=company[2])
+                new_reputation = st.number_input("New Reputation:", value=company[4])
+                if st.button("Save Changes"):
+                    update_company(company[0], new_name, new_support_points, new_reputation)
+                    st.success("Company details updated successfully!")
+            edit_company_dialog()
+        if st.button("Edit Mechs", key=f"edit_mechs_{company[0]}"):
+            @st.dialog("Edit Mechs")
+            def edit_mech_dialog():
+                mechs = get_all_mechs()
+                if not mechs:
+                    st.info("No mechs available.")
+                    return
+                mech_options = {f"{m[2]} (User: {m[1]}, BV: {m[3]}, Tonnage: {m[4]})": m for m in mechs}
+                selected = st.selectbox("Select a mech to edit", list(mech_options.keys()), key="edit_mech_select")
+                mech = mech_options[selected]
+                new_name = st.text_input("Mech Name", value=mech[2], key="edit_mech_name")
+                new_bv = st.number_input("Battle Value", value=int(mech[3]), step=1, key="edit_mech_bv")
+                new_tonnage = st.number_input("Tonnage", value=int(mech[4]), step=1, key="edit_mech_tonnage")
+                if st.button("Update Mech", key="update_mech_btn"):
+                    update_mech(mech[0], name=new_name, bv=new_bv, tonnage=new_tonnage)
+                    st.success("Mech updated!")
+            edit_mech_dialog()
+    authenticator.logout()
+
+elif st.session_state["authentication_status"]:
     st.write('___')
     authenticator.logout()
     st.write(f'Welcome *{st.session_state["username"]}*!')
     # Get user info from config
-    user_info = config['credentials']['usernames'].get(st.session_state["username"], {})
     email = user_info.get('email', '')
-    roles = ','.join(user_info.get('roles') or [])
-    add_user(st.session_state["username"], user_info.get('first_name', ''), email, roles)
+    roles_str = ','.join(roles)
+    add_user(st.session_state["username"], user_info.get('first_name', ''), email, roles_str)
     now = datetime.datetime.now().isoformat()
     update_last_login(st.session_state["username"], now)
     user_db_info = get_user(st.session_state["username"])
@@ -87,7 +155,7 @@ if st.session_state["authentication_status"]:
                         st.write(f"Pilot {Pname} with callsign {Cname} hired!")
                         add_pilot(st.session_state["username"], Pname, Cname, 5 if rookieOr else 4, 6 if rookieOr else 5)
                         update_support_points(st.session_state["username"], int(company[1]) - (0 if rookieOr else 100))
-                        #st.rerun()
+                        st.rerun()
             if hire_pilot_dialog():
                 st.write("Pilot hired successfully!")
 
@@ -133,7 +201,6 @@ elif st.session_state["authentication_status"] is None:
 
 if st.session_state["authentication_status"] is None:
 # Creating a password reset widget
-    st.subheader('Guest login')
     if st.session_state["authentication_status"]:
         try:
             if authenticator.reset_password(st.session_state["username"]):

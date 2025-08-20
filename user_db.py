@@ -29,6 +29,7 @@ def init_db():
         callsign TEXT,
         Pskill INTEGER,
         Gskill INTEGER,
+        improvements INTEGER,
         FOREIGN KEY(username) REFERENCES users(username)
     )''')
     c.execute('''CREATE TABLE IF NOT EXISTS companies (
@@ -39,7 +40,20 @@ def init_db():
         mechs TEXT,
         pilots TEXT,
         reputation INTEGER,
+        scale INTEGER,
         FOREIGN KEY(owner) REFERENCES users(username)
+    )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS contracts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        length INTEGER,
+        tracks TEXT,
+        track_types TEXT,
+        base_pay INTEGER,
+        salvage_terms INTEGER,
+        transport_terms INTEGER,
+        support_rights INTEGER,
+        status TEXT DEFAULT 'active'
     )''')
     conn.commit()
     conn.close()
@@ -192,4 +206,155 @@ def update_pilot(pilot_id, name=None, callsign=None, Pskill=None, Gskill=None):
         values.append(pilot_id)
         c.execute(query, tuple(values))
         conn.commit()
+    conn.close()
+
+def get_role(username):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('SELECT roles FROM users WHERE username=?', (username,))
+    roles = c.fetchone()
+    conn.close()
+    return roles[0] if roles else None
+
+def get_all_companies():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('SELECT id, name, SupportPoints, mechs, reputation, owner FROM companies')
+    companies = c.fetchall()
+    conn.close()
+    return companies
+
+def update_company(owner, name=None, support_points=None, mechs=None, reputation=None):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    fields = []
+    values = []
+    if name is not None:
+        fields.append('name=?')
+        values.append(name)
+    if support_points is not None:
+        fields.append('SupportPoints=?')
+        values.append(support_points)
+    if mechs is not None:
+        fields.append('mechs=?')
+        values.append(mechs)
+    if reputation is not None:
+        fields.append('reputation=?')
+        values.append(reputation)
+    if fields:
+        query = f'UPDATE companies SET {", ".join(fields)} WHERE owner=?'
+        values.append(owner)
+        c.execute(query, tuple(values))
+        conn.commit()
+    conn.close()
+
+def update_mech(mech_id, name=None, bv=None, tonnage=None, username=None):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    fields = []
+    values = []
+    if name is not None:
+        fields.append('name=?')
+        values.append(name)
+    if bv is not None:
+        fields.append('bv=?')
+        values.append(bv)
+    if tonnage is not None:
+        fields.append('tonnage=?')
+        values.append(tonnage)
+    if username is not None:
+        fields.append('username=?')
+        values.append(username)
+    if fields:
+        query = f'UPDATE mechs SET {", ".join(fields)} WHERE id=?'
+        values.append(mech_id)
+        c.execute(query, tuple(values))
+        conn.commit()
+    conn.close()
+
+def get_all_pilots():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('SELECT id, username, name, callsign, Pskill, Gskill FROM pilots')
+    pilots = c.fetchall()
+    conn.close()
+    return pilots
+
+def get_all_mechs():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('SELECT id, username, name, bv, tonnage FROM mechs')
+    mechs = c.fetchall()
+    conn.close()
+    return mechs
+
+def add_contract(name, length, tracks, track_types, base_pay, salvage_terms, transport_terms, support_rights, status='active'):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('''INSERT INTO contracts (name, length, tracks, track_types, base_pay, salvage_terms, transport_terms, support_rights, status)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+              (name, length, tracks, track_types, base_pay, salvage_terms, transport_terms, support_rights, status))
+    conn.commit()
+    conn.close()
+
+def get_all_contracts():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('SELECT * FROM contracts WHERE status="active"')
+    contracts = c.fetchall()
+    conn.close()
+    return contracts
+
+def get_active_contract():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('SELECT * FROM contracts WHERE status="active"')
+    contracts = c.fetchall()
+    conn.close()
+    return contracts
+
+def update_contract(contract_id, name=None, length=None, tracks=None, track_types=None, base_pay=None, salvage_terms=None, transport_terms=None, support_rights=None, status=None):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    fields = []
+    values = []
+    if name is not None:
+        fields.append('name=?')
+        values.append(name)
+    if length is not None:
+        fields.append('length=?')
+        values.append(length)
+    if tracks is not None:
+        fields.append('tracks=?')
+        values.append(tracks)
+    if track_types is not None:
+        fields.append('track_types=?')
+        values.append(track_types)
+    if base_pay is not None:
+        fields.append('base_pay=?')
+        values.append(base_pay)
+    if salvage_terms is not None:
+        fields.append('salvage_terms=?')
+        values.append(salvage_terms)
+    if transport_terms is not None:
+        fields.append('transport_terms=?')
+        values.append(transport_terms)
+    if support_rights is not None:
+        fields.append('support_rights=?')
+        values.append(support_rights)
+    if status is not None:
+        fields.append('status=?')
+        values.append(status)
+    if fields:
+        query = f'UPDATE contracts SET {", ".join(fields)} WHERE id=?'
+        values.append(contract_id)
+        c.execute(query, tuple(values))
+        conn.commit()
+    conn.close()
+
+def set_all_contracts_inactive():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('UPDATE contracts SET status="inactive" WHERE status="active"')
+    conn.commit()
     conn.close()
