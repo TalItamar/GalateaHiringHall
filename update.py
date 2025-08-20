@@ -21,8 +21,7 @@ if st.session_state.get("authentication_status"):
         **Transport Terms:** {contract[0][7]}  
         **Support Rights:** {contract[0][8]}  
         ---""")
-        if st.button("Negotiate Contract"):
-           if st.button("Negotiate Contract"):
+        if st.button("Negotiate Contracts"):
             @st.dialog("negotiation")
             def negotiation():
                 st.write("negotiation station")
