@@ -45,6 +45,7 @@ def init_db():
     )''')
     c.execute('''CREATE TABLE IF NOT EXISTS contracts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        owner TEXT,
         name TEXT,
         length INTEGER,
         tracks TEXT,
@@ -53,7 +54,9 @@ def init_db():
         salvage_terms INTEGER,
         transport_terms INTEGER,
         support_rights INTEGER,
-        status TEXT DEFAULT 'active'
+        command_rights INTEGER,
+        status TEXT DEFAULT 'active',
+        FOREIGN KEY(owner) REFERENCES users(username)
     )''')
     conn.commit()
     conn.close()
@@ -288,12 +291,12 @@ def get_all_mechs():
     conn.close()
     return mechs
 
-def add_contract(name, length, tracks, track_types, base_pay, salvage_terms, transport_terms, support_rights, status='active'):
+def add_contract(owner, name, length, tracks, track_types, base_pay, salvage_terms, transport_terms, support_rights, command_rights, status='active'):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute('''INSERT INTO contracts (name, length, tracks, track_types, base_pay, salvage_terms, transport_terms, support_rights, status)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-              (name, length, tracks, track_types, base_pay, salvage_terms, transport_terms, support_rights, status))
+    c.execute('''INSERT INTO contracts (owner, name, length, tracks, track_types, base_pay, salvage_terms, transport_terms, support_rights, command_rights, status)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+              (owner, name, length, tracks, track_types, base_pay, salvage_terms, transport_terms, support_rights, command_rights, status))
     conn.commit()
     conn.close()
 
@@ -305,15 +308,26 @@ def get_all_contracts():
     conn.close()
     return contracts
 
-def get_active_contract():
+def get_company_contracts(owner):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute('SELECT * FROM contracts WHERE status="active"')
+    c.execute('SELECT * FROM contracts WHERE owner=? AND status="active"', (owner,))
     contracts = c.fetchall()
     conn.close()
     return contracts
 
-def update_contract(contract_id, name=None, length=None, tracks=None, track_types=None, base_pay=None, salvage_terms=None, transport_terms=None, support_rights=None, status=None):
+def get_active_contract(owner=None):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    if owner:
+        c.execute('SELECT * FROM contracts WHERE owner=? AND status="active"', (owner,))
+    else:
+        c.execute('SELECT * FROM contracts WHERE status="active"')
+    contracts = c.fetchall()
+    conn.close()
+    return contracts
+
+def update_contract(contract_id, name=None, length=None, tracks=None, track_types=None, base_pay=None, salvage_terms=None, transport_terms=None, support_rights=None, command_rights=None, status=None):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     fields = []
@@ -342,6 +356,9 @@ def update_contract(contract_id, name=None, length=None, tracks=None, track_type
     if support_rights is not None:
         fields.append('support_rights=?')
         values.append(support_rights)
+    if command_rights is not None:
+        fields.append('command_rights=?')
+        values.append(command_rights)
     if status is not None:
         fields.append('status=?')
         values.append(status)

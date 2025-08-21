@@ -17,19 +17,19 @@ import pandas as pd
 
 rows = [
     # Step, Base Pay %, Command Rights, Salvage Rights,   Support Rights,    Transportation Terms %
-    (1,   50,  "—",           "None",                "None",             None),
-    (2,   55,  "—",           "—",                   "Straight/20%",     None),
-    (3,   60,  "Integrated",  "Exchange",            "Straight/40%",     None),
-    (4,   70,  "—",           "10%",                 "Straight/60%",     None),
+    (1,   50,  "—",           "None",                "None",             "none"),
+    (2,   55,  "—",           "—",                   "Straight/20%",     "none"),
+    (3,   60,  "Integrated",  "Exchange",            "Straight/40%",     "none"),
+    (4,   70,  "—",           "10%",                 "Straight/60%",     "none"),
     (5,   80,  "—",           "20%",                 "Straight/80%",     0),
     (6,   90,  "—",           "30%",                 "Straight/100%",    25),
     (7,   100, "House",       "40%",                 "Battle/10%",       50),
     (8,   110, "Liaison",     "50%",                 "Battle/20%",       75),
     (9,   120, "—",           "60%",                 "Battle/30%",       100),
-    (10,  130, "—",           "70%",                 "Battle/40%",       None),
-    (11,  150, "Independent", "80%",                 "Battle/50%",       None),
-    (12,  175, "—",           "90%",                 "Battle/75%",       None),
-    (13,  200, "—",           "100%",                "Battle/100%",      None),
+    (10,  130, "—",           "70%",                 "Battle/40%",       "none"),
+    (11,  150, "Independent", "80%",                 "Battle/50%",       "none"),
+    (12,  175, "—",           "90%",                 "Battle/75%",       "none"),
+    (13,  200, "—",           "100%",                "Battle/100%",      "none"),
 ]
 
 df2 = pd.DataFrame(rows, columns=[
@@ -90,34 +90,44 @@ if st.session_state["authentication_status"] and "admin" in roles:
 
             st.write("**Step Selection for Each Option:**")
             # Only show steps where the value is not "-" for each option
-            base_pay_steps = df2[df2["Base Pay"] != "-"]["Step"].tolist()
-            base_pay_step = st.selectbox("Pick a step for Base Pay", base_pay_steps, key="base_pay_step")
-            base_pay_row = df2[df2["Step"] == base_pay_step].iloc[0]
-            st.write(f"**Base Pay for Step {base_pay_step}:** {base_pay_row['Base Pay']}%")
+            base_pay_rows = df2[(df2["Base Pay"] != "-") & (df2["Base Pay"].notna()) & (df2["Base Pay"] != "—") & (df2["Base Pay"] != "None")]
+            base_pay_options = [f"Step {row['Step']}: {row['Base Pay']}%" for _, row in base_pay_rows.iterrows()]
+            base_pay_idx = st.selectbox("Pick a step for Base Pay", base_pay_options, key="base_pay_step")
+            base_pay_row = base_pay_rows.iloc[base_pay_options.index(base_pay_idx)]
+            # Ensure base_pay is always an int for DB
+            base_pay_int = int(base_pay_row['Base Pay'])
 
-            command_rights_steps = df2[df2["Command Rights"] != "—"]["Step"].tolist()
-            command_rights_step = st.selectbox("Pick a step for Command Rights", command_rights_steps, key="command_rights_step")
-            command_rights_row = df2[df2["Step"] == command_rights_step].iloc[0]
-            st.write(f"**Command Rights for Step {command_rights_step}:** {command_rights_row['Command Rights']}")
+            command_rights_rows = df2[(df2["Command Rights"] != "—") & (df2["Command Rights"] != "None") & (df2["Command Rights"].notna())]
+            command_rights_options = [f"Step {row['Step']}: {row['Command Rights']}" for _, row in command_rights_rows.iterrows()]
+            command_rights_idx = st.selectbox("Pick a step for Command Rights", command_rights_options, key="command_rights_step")
+            command_rights_row = command_rights_rows.iloc[command_rights_options.index(command_rights_idx)]
 
-            salvage_rights_steps = df2[df2["Salvage Rights"] != "—"]["Step"].tolist()
-            salvage_rights_step = st.selectbox("Pick a step for Salvage Rights", salvage_rights_steps, key="salvage_rights_step")
-            salvage_rights_row = df2[df2["Step"] == salvage_rights_step].iloc[0]
-            st.write(f"**Salvage Rights for Step {salvage_rights_step}:** {salvage_rights_row['Salvage Rights']}")
+            salvage_rights_rows = df2[(df2["Salvage Rights"] != "—") & (df2["Salvage Rights"] != "None") & (df2["Salvage Rights"].notna())]
+            salvage_rights_options = [f"Step {row['Step']}: {row['Salvage Rights']}" for _, row in salvage_rights_rows.iterrows()]
+            salvage_rights_idx = st.selectbox("Pick a step for Salvage Rights", salvage_rights_options, key="salvage_rights_step")
+            salvage_rights_row = salvage_rights_rows.iloc[salvage_rights_options.index(salvage_rights_idx)]
 
-            support_rights_steps = df2[df2["Support Rights"] != "—"]["Step"].tolist()
-            support_rights_step = st.selectbox("Pick a step for Support Rights", support_rights_steps, key="support_rights_step")
-            support_rights_row = df2[df2["Step"] == support_rights_step].iloc[0]
-            st.write(f"**Support Rights for Step {support_rights_step}:** {support_rights_row['Support Rights']}")
+            support_rights_rows = df2[(df2["Support Rights"] != "—") & (df2["Support Rights"] != "None") & (df2["Support Rights"].notna())]
+            support_rights_options = [f"Step {row['Step']}: {row['Support Rights']}" for _, row in support_rights_rows.iterrows()]
+            support_rights_idx = st.selectbox("Pick a step for Support Rights", support_rights_options, key="support_rights_step")
+            support_rights_row = support_rights_rows.iloc[support_rights_options.index(support_rights_idx)]
 
-            transport_terms_steps = df2[df2["Transportation Terms"].notna()]["Step"].tolist()
-            transport_terms_step = st.selectbox("Pick a step for Transportation Terms", transport_terms_steps, key="transport_terms_step")
-            transport_terms_row = df2[df2["Step"] == transport_terms_step].iloc[0]
-            st.write(f"**Transportation Terms for Step {transport_terms_step}:** {transport_terms_row['Transportation Terms']}%")
+            transport_terms_rows = df2[(df2["Transportation Terms"].notna()) & (df2["Transportation Terms"] != "None")]
+            transport_terms_options = [f"Step {row['Step']}: {row['Transportation Terms']}%" for _, row in transport_terms_rows.iterrows()]
+            transport_terms_idx = st.selectbox("Pick a step for Transportation Terms", transport_terms_options, key="transport_terms_step")
+            transport_terms_row = transport_terms_rows.iloc[transport_terms_options.index(transport_terms_idx)]
             if st.button("Submit"):
                 set_all_contracts_inactive()
-                # You may want to update add_contract to use the selected values for each option
-                add_contract(name, length, tracks, track_types, base_pay_row['Base Pay'], salvage_rights_row['Salvage Rights'], transport_terms, support_rights)
+                # Store only integer for base_pay
+                add_contract(
+                    st.session_state["username"],
+                    name, length, tracks, track_types,
+                    int(base_pay_row["Base Pay"]),
+                    salvage_rights_row['Salvage Rights'],
+                    transport_terms_row['Transportation Terms'],
+                    support_rights_row['Support Rights'],
+                    command_rights_row['Command Rights']
+                )
                 st.success("Contract submitted successfully!")
         submit_contract_dialog()
 
